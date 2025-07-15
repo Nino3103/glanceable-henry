@@ -1,13 +1,14 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import OverviewCard from "../OverviewCard/OverviewCard";
 import {
-  useFilters,
+  useFiltersContext,
   Timeframe,
   Channel,
   Topic,
 } from "../../FilterProvider/FilterContext";
+import { useDataFetching } from "../../../../hooks/useDataFetching";
 
 interface Recommendation {
   id?: string;
@@ -19,107 +20,89 @@ interface Recommendation {
   topic?: Topic;
 }
 
+const transformRecommendation = (
+  rec: string,
+  index: number
+): Recommendation => ({
+  id: (index + 1).toString(),
+  text: rec,
+  urgency: (["high", "medium", "low"] as const)[index % 3],
+  impact: (["high", "medium", "medium"] as const)[index % 3],
+});
+
+const fallbackRecommendations: Recommendation[] = [
+  {
+    id: "1",
+    text: "Optimize checkout flow",
+    urgency: "high",
+    impact: "high",
+    timeframe: Timeframe.WEEK,
+    channel: Channel.WEB,
+    topic: Topic.SALES,
+  },
+  {
+    id: "2",
+    text: "Update mobile app UI",
+    urgency: "medium",
+    impact: "medium",
+    timeframe: Timeframe.MONTH,
+    channel: Channel.MOBILE,
+    topic: Topic.PRODUCT,
+  },
+  {
+    id: "3",
+    text: "Expand social media presence",
+    urgency: "low",
+    impact: "medium",
+    timeframe: Timeframe.QUARTER,
+    channel: Channel.SOCIAL,
+    topic: Topic.MARKETING,
+  },
+  {
+    id: "4",
+    text: "Improve customer support response time",
+    urgency: "high",
+    impact: "high",
+    timeframe: Timeframe.WEEK,
+    channel: Channel.EMAIL,
+    topic: Topic.CUSTOMER_SERVICE,
+  },
+  {
+    id: "5",
+    text: "Automate financial reporting",
+    urgency: "medium",
+    impact: "high",
+    timeframe: Timeframe.MONTH,
+    channel: Channel.DIRECT,
+    topic: Topic.FINANCE,
+  },
+  {
+    id: "6",
+    text: "Upgrade server infrastructure",
+    urgency: "high",
+    impact: "medium",
+    timeframe: Timeframe.TODAY,
+    channel: Channel.DIRECT,
+    topic: Topic.TECH,
+  },
+];
+
 const AIRecommendations: React.FC = () => {
-  const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
-  const [, setLoading] = useState(true);
+  const { data: recommendations, setData: setRecommendations } =
+    useDataFetching<string, Recommendation>({
+      url: "/api/recommendations",
+      dataPath: "recommendations",
+      transform: transformRecommendation,
+      fallbackData: fallbackRecommendations,
+    });
+
   const [urgencyFilter, setUrgencyFilter] = useState<
     "all" | "high" | "medium" | "low"
   >("all");
   const [impactFilter, setImpactFilter] = useState<
     "all" | "high" | "medium" | "low"
   >("all");
-  const { filters } = useFilters();
-
-  useEffect(() => {
-    const fetchRecommendations = async () => {
-      try {
-        const response = await fetch("/api/recommendations");
-        const data = await response.json();
-
-        if (data.recommendations) {
-          // Transform string array to object array
-          const transformedRecommendations = data.recommendations.map(
-            (rec: string, index: number) => ({
-              id: (index + 1).toString(),
-              text: rec,
-              urgency: ["high", "medium", "low"][index % 3] as
-                | "high"
-                | "medium"
-                | "low",
-              impact: ["high", "medium", "medium"][index % 3] as
-                | "high"
-                | "medium"
-                | "low",
-            })
-          );
-          setRecommendations(transformedRecommendations);
-        }
-      } catch (error) {
-        console.error("Error fetching recommendations:", error);
-        // Keep fallback data with filter properties
-        setRecommendations([
-          {
-            id: "1",
-            text: "Optimize checkout flow",
-            urgency: "high",
-            impact: "high",
-            timeframe: Timeframe.WEEK,
-            channel: Channel.WEB,
-            topic: Topic.SALES,
-          },
-          {
-            id: "2",
-            text: "Update mobile app UI",
-            urgency: "medium",
-            impact: "medium",
-            timeframe: Timeframe.MONTH,
-            channel: Channel.MOBILE,
-            topic: Topic.PRODUCT,
-          },
-          {
-            id: "3",
-            text: "Expand social media presence",
-            urgency: "low",
-            impact: "medium",
-            timeframe: Timeframe.QUARTER,
-            channel: Channel.SOCIAL,
-            topic: Topic.MARKETING,
-          },
-          {
-            id: "4",
-            text: "Improve customer support response time",
-            urgency: "high",
-            impact: "high",
-            timeframe: Timeframe.WEEK,
-            channel: Channel.EMAIL,
-            topic: Topic.CUSTOMER_SERVICE,
-          },
-          {
-            id: "5",
-            text: "Automate financial reporting",
-            urgency: "medium",
-            impact: "high",
-            timeframe: Timeframe.MONTH,
-            channel: Channel.DIRECT,
-            topic: Topic.FINANCE,
-          },
-          {
-            id: "6",
-            text: "Upgrade server infrastructure",
-            urgency: "high",
-            impact: "medium",
-            timeframe: Timeframe.TODAY,
-            channel: Channel.DIRECT,
-            topic: Topic.TECH,
-          },
-        ]);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchRecommendations();
-  }, []);
+  const { filters } = useFiltersContext();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newRecommendation, setNewRecommendation] = useState({

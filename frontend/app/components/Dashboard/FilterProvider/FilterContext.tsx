@@ -73,10 +73,10 @@ export const FilterProvider: React.FC<{ children: ReactNode }> = ({
   );
 };
 
-export const useFilters = () => {
+export const useFiltersContext = () => {
   const context = useContext(FilterContext);
   if (context === undefined) {
-    throw new Error("useFilters must be used within a FilterProvider");
+    throw new Error("useFiltersContext must be used within a FilterProvider");
   }
   return context;
 };

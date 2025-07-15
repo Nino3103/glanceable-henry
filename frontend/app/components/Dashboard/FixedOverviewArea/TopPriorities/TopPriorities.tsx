@@ -1,13 +1,14 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import OverviewCard from "../OverviewCard/OverviewCard";
 import {
-  useFilters,
+  useFiltersContext,
   Timeframe,
   Channel,
   Topic,
 } from "../../FilterProvider/FilterContext";
+import { useDataFetching } from "../../../../hooks/useDataFetching";
 
 interface Priority {
   id: string;
@@ -23,102 +24,91 @@ interface Priority {
   topic?: Topic;
 }
 
+type ApiPriority = {
+  id: string;
+  title?: string;
+  task?: string;
+  deadline?: string;
+  status: string;
+};
+
+const transformPriority = (priority: ApiPriority): Priority => ({
+  id: priority.id,
+  task: priority.title || priority.task,
+  deadline: priority.deadline || "No deadline",
+  status: (priority.status === "planned"
+    ? "pending"
+    : priority.status) as Priority["status"],
+});
+
+const fallbackPriorities: Priority[] = [
+  {
+    id: "1",
+    task: "Review Q4 financials",
+    deadline: "Today",
+    status: "in-progress",
+    timeframe: Timeframe.TODAY,
+    channel: Channel.DIRECT,
+    topic: Topic.FINANCE,
+  },
+  {
+    id: "2",
+    task: "Update team on project status",
+    deadline: "Dec 15",
+    status: "pending",
+    timeframe: Timeframe.WEEK,
+    channel: Channel.EMAIL,
+    topic: Topic.OPERATIONS,
+  },
+  {
+    id: "3",
+    task: "Prepare monthly report",
+    deadline: "Dec 18",
+    status: "pending",
+    timeframe: Timeframe.MONTH,
+    channel: Channel.DIRECT,
+    topic: Topic.OPERATIONS,
+  },
+  {
+    id: "4",
+    task: "Optimize mobile checkout",
+    deadline: "This week",
+    status: "in-progress",
+    timeframe: Timeframe.WEEK,
+    channel: Channel.MOBILE,
+    topic: Topic.SALES,
+  },
+  {
+    id: "5",
+    task: "Launch social media campaign",
+    deadline: "Dec 20",
+    status: "pending",
+    timeframe: Timeframe.MONTH,
+    channel: Channel.SOCIAL,
+    topic: Topic.MARKETING,
+  },
+  {
+    id: "6",
+    task: "Fix server performance issues",
+    deadline: "Tomorrow",
+    status: "in-progress",
+    timeframe: Timeframe.TODAY,
+    channel: Channel.DIRECT,
+    topic: Topic.TECH,
+  },
+];
+
 const TopPriorities: React.FC = () => {
-  const [priorities, setPriorities] = useState<Priority[]>([]);
-  const [, setLoading] = useState(true);
-  const { filters } = useFilters();
-
-  useEffect(() => {
-    const fetchPriorities = async () => {
-      try {
-        const response = await fetch("/api/priorities");
-        const data = await response.json();
-
-        if (data.priorities) {
-          // Transform API data to component format
-          const transformedPriorities = data.priorities.map(
-            (priority: {
-              id: string;
-              title?: string;
-              task?: string;
-              deadline?: string;
-              status: string;
-            }) => ({
-              id: priority.id,
-              task: priority.title || priority.task,
-              deadline: priority.deadline || "No deadline",
-              status:
-                priority.status === "planned" ? "pending" : priority.status,
-            })
-          );
-          setPriorities(transformedPriorities);
-        }
-      } catch (error) {
-        console.error("Error fetching priorities:", error);
-        // Keep fallback data with filter properties
-        setPriorities([
-          {
-            id: "1",
-            task: "Review Q4 financials",
-            deadline: "Today",
-            status: "in-progress",
-            timeframe: Timeframe.TODAY,
-            channel: Channel.DIRECT,
-            topic: Topic.FINANCE,
-          },
-          {
-            id: "2",
-            task: "Update team on project status",
-            deadline: "Dec 15",
-            status: "pending",
-            timeframe: Timeframe.WEEK,
-            channel: Channel.EMAIL,
-            topic: Topic.OPERATIONS,
-          },
-          {
-            id: "3",
-            task: "Prepare monthly report",
-            deadline: "Dec 18",
-            status: "pending",
-            timeframe: Timeframe.MONTH,
-            channel: Channel.DIRECT,
-            topic: Topic.OPERATIONS,
-          },
-          {
-            id: "4",
-            task: "Optimize mobile checkout",
-            deadline: "This week",
-            status: "in-progress",
-            timeframe: Timeframe.WEEK,
-            channel: Channel.MOBILE,
-            topic: Topic.SALES,
-          },
-          {
-            id: "5",
-            task: "Launch social media campaign",
-            deadline: "Dec 20",
-            status: "pending",
-            timeframe: Timeframe.MONTH,
-            channel: Channel.SOCIAL,
-            topic: Topic.MARKETING,
-          },
-          {
-            id: "6",
-            task: "Fix server performance issues",
-            deadline: "Tomorrow",
-            status: "in-progress",
-            timeframe: Timeframe.TODAY,
-            channel: Channel.DIRECT,
-            topic: Topic.TECH,
-          },
-        ]);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchPriorities();
-  }, []);
+  const { filters } = useFiltersContext();
+  const { data: priorities, setData: setPriorities } = useDataFetching<
+    ApiPriority,
+    Priority
+  >({
+    url: "/api/priorities",
+    dataPath: "priorities",
+    transform: transformPriority,
+    fallbackData: fallbackPriorities,
+  });
 
   // Filter priorities based on global filters
   const filteredPriorities = priorities.filter((priority) => {

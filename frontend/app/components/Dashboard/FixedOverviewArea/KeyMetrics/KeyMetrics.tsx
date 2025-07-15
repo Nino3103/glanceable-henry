@@ -1,13 +1,14 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import OverviewCard from "../OverviewCard/OverviewCard";
 import {
-  useFilters,
+  useFiltersContext,
   Timeframe,
   Channel,
   Topic,
 } from "../../FilterProvider/FilterContext";
+import { useDataFetching } from "../../../../hooks/useDataFetching";
 
 interface Metric {
   id?: string;
@@ -22,108 +23,96 @@ interface Metric {
   topic?: Topic;
 }
 
+type ApiMetric = {
+  id: string;
+  title?: string;
+  name?: string;
+  value: string | number;
+  change?: string;
+  changeType?: string;
+};
+
+const transformMetric = (metric: ApiMetric): Metric => ({
+  id: metric.id,
+  name: metric.title || metric.name,
+  value: metric.value,
+  change: metric.change,
+  trend:
+    metric.changeType === "positive"
+      ? "up"
+      : metric.changeType === "negative"
+      ? "down"
+      : "neutral",
+});
+
+const fallbackMetrics: Metric[] = [
+  {
+    name: "Revenue",
+    value: "$45.2K",
+    change: "+12%",
+    trend: "up",
+    timeframe: Timeframe.MONTH,
+    channel: Channel.WEB,
+    topic: Topic.SALES,
+  },
+  {
+    name: "Users",
+    value: "2,847",
+    change: "+5%",
+    trend: "up",
+    timeframe: Timeframe.WEEK,
+    channel: Channel.MOBILE,
+    topic: Topic.MARKETING,
+  },
+  {
+    name: "Orders",
+    value: "182",
+    change: "-3%",
+    trend: "down",
+    timeframe: Timeframe.TODAY,
+    channel: Channel.WEB,
+    topic: Topic.SALES,
+  },
+  {
+    name: "Conversion",
+    value: "3.2%",
+    change: "+0.8%",
+    trend: "up",
+    timeframe: Timeframe.MONTH,
+    channel: Channel.ORGANIC,
+    topic: Topic.MARKETING,
+  },
+  {
+    name: "Support Tickets",
+    value: "24",
+    change: "+8%",
+    trend: "down",
+    timeframe: Timeframe.WEEK,
+    channel: Channel.EMAIL,
+    topic: Topic.CUSTOMER_SERVICE,
+  },
+  {
+    name: "Server Uptime",
+    value: "99.9%",
+    change: "0%",
+    trend: "neutral",
+    timeframe: Timeframe.MONTH,
+    channel: Channel.DIRECT,
+    topic: Topic.TECH,
+  },
+];
+
 const KeyMetrics: React.FC = () => {
-  const [metrics, setMetrics] = useState<Metric[]>([]);
-  const [, setLoading] = useState(true);
-  const { filters } = useFilters();
-
-  useEffect(() => {
-    const fetchMetrics = async () => {
-      try {
-        const response = await fetch("/api/metrics");
-        const data = await response.json();
-
-        if (data.metrics) {
-          // Transform API data to component format
-          const transformedMetrics = data.metrics.map(
-            (metric: {
-              id: string;
-              title?: string;
-              name?: string;
-              value: string | number;
-              change?: string;
-              changeType?: string;
-            }) => ({
-              id: metric.id,
-              name: metric.title || metric.name,
-              value: metric.value,
-              change: metric.change,
-              trend:
-                metric.changeType === "positive"
-                  ? "up"
-                  : metric.changeType === "negative"
-                  ? "down"
-                  : "neutral",
-            })
-          );
-          setMetrics(transformedMetrics);
-        }
-      } catch (error) {
-        console.error("Error fetching metrics:", error);
-        // Keep fallback data with filter properties
-        setMetrics([
-          {
-            name: "Revenue",
-            value: "$45.2K",
-            change: "+12%",
-            trend: "up",
-            timeframe: Timeframe.MONTH,
-            channel: Channel.WEB,
-            topic: Topic.SALES,
-          },
-          {
-            name: "Users",
-            value: "2,847",
-            change: "+5%",
-            trend: "up",
-            timeframe: Timeframe.WEEK,
-            channel: Channel.MOBILE,
-            topic: Topic.MARKETING,
-          },
-          {
-            name: "Orders",
-            value: "182",
-            change: "-3%",
-            trend: "down",
-            timeframe: Timeframe.TODAY,
-            channel: Channel.WEB,
-            topic: Topic.SALES,
-          },
-          {
-            name: "Conversion",
-            value: "3.2%",
-            change: "+0.8%",
-            trend: "up",
-            timeframe: Timeframe.MONTH,
-            channel: Channel.ORGANIC,
-            topic: Topic.MARKETING,
-          },
-          {
-            name: "Support Tickets",
-            value: "24",
-            change: "+8%",
-            trend: "down",
-            timeframe: Timeframe.WEEK,
-            channel: Channel.EMAIL,
-            topic: Topic.CUSTOMER_SERVICE,
-          },
-          {
-            name: "Server Uptime",
-            value: "99.9%",
-            change: "0%",
-            trend: "neutral",
-            timeframe: Timeframe.MONTH,
-            channel: Channel.DIRECT,
-            topic: Topic.TECH,
-          },
-        ]);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchMetrics();
-  }, []);
+  const { filters } = useFiltersContext();
+  const { data: metrics, setData: setMetrics } = useDataFetching<
+    ApiMetric,
+    Metric
+  >({
+    url: "/api/metrics",
+    dataPath: "metrics",
+    transform: transformMetric,
+    fallbackData: fallbackMetrics,
+  });
 
   // Filter metrics based on global filters
   const filteredMetrics = metrics.filter((metric) => {

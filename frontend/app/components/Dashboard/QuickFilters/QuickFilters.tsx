@@ -2,7 +2,7 @@
 
 import React from "react";
 import {
-  useFilters,
+  useFiltersContext,
   Timeframe,
   Channel,
   Topic,
@@ -10,7 +10,7 @@ import {
 } from "../FilterProvider/FilterContext";
 
 const QuickFilters: React.FC = () => {
-  const { filters, updateFilters, resetFilters } = useFilters();
+  const { filters, updateFilters, resetFilters } = useFiltersContext();
   const labels = getFilterLabels();
 
   const hasActiveFilters =
