@@ -15,6 +15,7 @@ import { fallbackMetrics } from "./utils/fallbackMetrics";
 import Modal from "../../../shared/Modal";
 import AIGenerateButton from "../../../shared/AIGenerateButton";
 import { AddKeyMetricForm } from "./AddKeyMetricForm/AddKeyMetricForm";
+import MetricRow from "./MetricRow/MetricRow";
 
 const KeyMetrics: React.FC = () => {
   const { filters } = useFiltersContext();
@@ -169,30 +170,7 @@ const KeyMetrics: React.FC = () => {
         <div className="h-48 overflow-y-auto space-y-3">
           {filteredMetrics.length > 0 ? (
             filteredMetrics.map((metric, index) => (
-              <div
-                key={`${metric.name}-${index}`}
-                className="flex justify-between items-center"
-              >
-                <span className="font-medium text-gray-800">{metric.name}</span>
-                <div className="flex items-center gap-2">
-                  <span className="font-bold text-gray-800">
-                    {metric.value}
-                  </span>
-                  {metric.change && (
-                    <span
-                      className={`text-xs ${
-                        metric.trend === "up"
-                          ? "text-success"
-                          : metric.trend === "down"
-                          ? "text-destructive"
-                          : "text-muted-foreground"
-                      }`}
-                    >
-                      {metric.change}
-                    </span>
-                  )}
-                </div>
-              </div>
+              <MetricRow key={`${metric.name}-${index}`} metric={metric} />
             ))
           ) : (
             <div className="text-sm text-gray-500 text-center py-8">
