@@ -13,6 +13,7 @@ import { ApiMetric, Metric } from "./types";
 import { transformMetric } from "./utils/transformMetrics";
 import { fallbackMetrics } from "./utils/fallbackMetrics";
 import Modal from "../../../shared/Modal";
+import AIGenerateButton from "../../../shared/AIGenerateButton";
 
 const KeyMetrics: React.FC = () => {
   const { filters } = useFiltersContext();
@@ -94,7 +95,7 @@ const KeyMetrics: React.FC = () => {
     });
   };
 
-  const handleAIGenerate = () => {
+  const handleRandomGenerate = () => {
     // Sample metrics with filter properties
     const sampleMetrics = [
       {
@@ -205,25 +206,7 @@ const KeyMetrics: React.FC = () => {
           <h3 className="text-lg font-semibold text-gray-900">
             Add New Metric
           </h3>
-          <button
-            type="button"
-            onClick={handleAIGenerate}
-            className="bg-purple-600 text-white px-3 py-1 rounded-md text-sm font-medium hover:bg-purple-700 flex items-center gap-1"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-4 w-4"
-              viewBox="0 0 20 20"
-              fill="currentColor"
-            >
-              <path
-                fillRule="evenodd"
-                d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z"
-                clipRule="evenodd"
-              />
-            </svg>
-            Random Generate
-          </button>
+          <AIGenerateButton onClick={handleRandomGenerate} />
         </div>
         <form onSubmit={handleSubmitMetric} className="space-y-4">
           <div>
