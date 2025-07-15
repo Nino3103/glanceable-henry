@@ -12,6 +12,7 @@ import { useDataFetching } from "../../../../hooks/useDataFetching";
 import { ApiMetric, Metric } from "./types";
 import { transformMetric } from "./utils/transformMetrics";
 import { fallbackMetrics } from "./utils/fallbackMetrics";
+import Modal from "../../../shared/Modal";
 
 const KeyMetrics: React.FC = () => {
   const { filters } = useFiltersContext();
@@ -25,6 +26,17 @@ const KeyMetrics: React.FC = () => {
     fallbackData: fallbackMetrics,
   });
 
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [newMetric, setNewMetric] = useState({
+    name: "",
+    value: "",
+    change: "",
+    trend: "neutral" as "up" | "down" | "neutral",
+    timeframe: Timeframe.MONTH,
+    channel: Channel.WEB,
+    topic: Topic.SALES,
+  });
+
   // Filter metrics based on global filters
   const filteredMetrics = metrics.filter((metric) => {
     const timeframeMatch =
@@ -35,17 +47,6 @@ const KeyMetrics: React.FC = () => {
     const topicMatch =
       filters.topic === Topic.ALL || metric.topic === filters.topic;
     return timeframeMatch && channelMatch && topicMatch;
-  });
-
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [newMetric, setNewMetric] = useState({
-    name: "",
-    value: "",
-    change: "",
-    trend: "neutral" as "up" | "down" | "neutral",
-    timeframe: Timeframe.MONTH,
-    channel: Channel.WEB,
-    topic: Topic.SALES,
   });
 
   const handleAddMetric = () => {
@@ -199,189 +200,183 @@ const KeyMetrics: React.FC = () => {
         </div>
       </OverviewCard>
 
-      {isModalOpen && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-semibold text-gray-900">
-                Add New Metric
-              </h3>
-              <button
-                type="button"
-                onClick={handleAIGenerate}
-                className="bg-purple-600 text-white px-3 py-1 rounded-md text-sm font-medium hover:bg-purple-700 flex items-center gap-1"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-4 w-4"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-                Random Generate
-              </button>
-            </div>
-            <form onSubmit={handleSubmitMetric} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Metric Name
-                </label>
-                <input
-                  type="text"
-                  value={newMetric.name}
-                  onChange={(e) =>
-                    setNewMetric((prev) => ({ ...prev, name: e.target.value }))
-                  }
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-gray-900"
-                  placeholder="e.g., NPS Score"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Value
-                </label>
-                <input
-                  type="text"
-                  value={newMetric.value}
-                  onChange={(e) =>
-                    setNewMetric((prev) => ({ ...prev, value: e.target.value }))
-                  }
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-gray-900"
-                  placeholder="e.g., 72 or 86%"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Change (optional)
-                </label>
-                <input
-                  type="text"
-                  value={newMetric.change}
-                  onChange={(e) =>
-                    setNewMetric((prev) => ({
-                      ...prev,
-                      change: e.target.value,
-                    }))
-                  }
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-gray-900"
-                  placeholder="e.g., +5% or -2%"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Trend
-                </label>
-                <select
-                  value={newMetric.trend}
-                  onChange={(e) =>
-                    setNewMetric((prev) => ({
-                      ...prev,
-                      trend: e.target.value as "up" | "down" | "neutral",
-                    }))
-                  }
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-gray-900"
-                >
-                  <option value="up">Up (Positive)</option>
-                  <option value="down">Down (Negative)</option>
-                  <option value="neutral">Neutral</option>
-                </select>
-              </div>
-              <div className="grid grid-cols-3 gap-3">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Timeframe
-                  </label>
-                  <select
-                    value={newMetric.timeframe}
-                    onChange={(e) =>
-                      setNewMetric((prev) => ({
-                        ...prev,
-                        timeframe: e.target.value as Timeframe,
-                      }))
-                    }
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 text-gray-900"
-                  >
-                    <option value={Timeframe.TODAY}>Today</option>
-                    <option value={Timeframe.WEEK}>This Week</option>
-                    <option value={Timeframe.MONTH}>This Month</option>
-                    <option value={Timeframe.QUARTER}>This Quarter</option>
-                    <option value={Timeframe.YEAR}>This Year</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Channel
-                  </label>
-                  <select
-                    value={newMetric.channel}
-                    onChange={(e) =>
-                      setNewMetric((prev) => ({
-                        ...prev,
-                        channel: e.target.value as Channel,
-                      }))
-                    }
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 text-gray-900"
-                  >
-                    <option value={Channel.WEB}>Web</option>
-                    <option value={Channel.MOBILE}>Mobile</option>
-                    <option value={Channel.EMAIL}>Email</option>
-                    <option value={Channel.SOCIAL}>Social</option>
-                    <option value={Channel.DIRECT}>Direct</option>
-                    <option value={Channel.ORGANIC}>Organic</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Topic
-                  </label>
-                  <select
-                    value={newMetric.topic}
-                    onChange={(e) =>
-                      setNewMetric((prev) => ({
-                        ...prev,
-                        topic: e.target.value as Topic,
-                      }))
-                    }
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 text-gray-900"
-                  >
-                    <option value={Topic.SALES}>Sales</option>
-                    <option value={Topic.MARKETING}>Marketing</option>
-                    <option value={Topic.PRODUCT}>Product</option>
-                    <option value={Topic.CUSTOMER_SERVICE}>
-                      Customer Service
-                    </option>
-                    <option value={Topic.OPERATIONS}>Operations</option>
-                    <option value={Topic.FINANCE}>Finance</option>
-                    <option value={Topic.TECH}>Technology</option>
-                  </select>
-                </div>
-              </div>
-              <div className="flex justify-end gap-3">
-                <button
-                  type="button"
-                  onClick={handleCloseModal}
-                  className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="px-4 py-2 bg-blue-600 border border-transparent rounded-md text-sm font-medium text-white hover:bg-blue-700"
-                >
-                  Add Metric
-                </button>
-              </div>
-            </form>
-          </div>
+      <Modal isOpen={isModalOpen} onClose={handleCloseModal}>
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="text-lg font-semibold text-gray-900">
+            Add New Metric
+          </h3>
+          <button
+            type="button"
+            onClick={handleAIGenerate}
+            className="bg-purple-600 text-white px-3 py-1 rounded-md text-sm font-medium hover:bg-purple-700 flex items-center gap-1"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-4 w-4"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+            >
+              <path
+                fillRule="evenodd"
+                d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z"
+                clipRule="evenodd"
+              />
+            </svg>
+            Random Generate
+          </button>
         </div>
-      )}
+        <form onSubmit={handleSubmitMetric} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Metric Name
+            </label>
+            <input
+              type="text"
+              value={newMetric.name}
+              onChange={(e) =>
+                setNewMetric((prev) => ({ ...prev, name: e.target.value }))
+              }
+              className="w-full border border-gray-300 rounded-md px-3 py-2 text-gray-900"
+              placeholder="e.g., NPS Score"
+              required
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Value
+            </label>
+            <input
+              type="text"
+              value={newMetric.value}
+              onChange={(e) =>
+                setNewMetric((prev) => ({ ...prev, value: e.target.value }))
+              }
+              className="w-full border border-gray-300 rounded-md px-3 py-2 text-gray-900"
+              placeholder="e.g., 72 or 86%"
+              required
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Change (optional)
+            </label>
+            <input
+              type="text"
+              value={newMetric.change}
+              onChange={(e) =>
+                setNewMetric((prev) => ({
+                  ...prev,
+                  change: e.target.value,
+                }))
+              }
+              className="w-full border border-gray-300 rounded-md px-3 py-2 text-gray-900"
+              placeholder="e.g., +5% or -2%"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Trend
+            </label>
+            <select
+              value={newMetric.trend}
+              onChange={(e) =>
+                setNewMetric((prev) => ({
+                  ...prev,
+                  trend: e.target.value as "up" | "down" | "neutral",
+                }))
+              }
+              className="w-full border border-gray-300 rounded-md px-3 py-2 text-gray-900"
+            >
+              <option value="up">Up (Positive)</option>
+              <option value="down">Down (Negative)</option>
+              <option value="neutral">Neutral</option>
+            </select>
+          </div>
+          <div className="grid grid-cols-3 gap-3">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Timeframe
+              </label>
+              <select
+                value={newMetric.timeframe}
+                onChange={(e) =>
+                  setNewMetric((prev) => ({
+                    ...prev,
+                    timeframe: e.target.value as Timeframe,
+                  }))
+                }
+                className="w-full border border-gray-300 rounded-md px-3 py-2 text-gray-900"
+              >
+                <option value={Timeframe.TODAY}>Today</option>
+                <option value={Timeframe.WEEK}>This Week</option>
+                <option value={Timeframe.MONTH}>This Month</option>
+                <option value={Timeframe.QUARTER}>This Quarter</option>
+                <option value={Timeframe.YEAR}>This Year</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Channel
+              </label>
+              <select
+                value={newMetric.channel}
+                onChange={(e) =>
+                  setNewMetric((prev) => ({
+                    ...prev,
+                    channel: e.target.value as Channel,
+                  }))
+                }
+                className="w-full border border-gray-300 rounded-md px-3 py-2 text-gray-900"
+              >
+                <option value={Channel.WEB}>Web</option>
+                <option value={Channel.MOBILE}>Mobile</option>
+                <option value={Channel.EMAIL}>Email</option>
+                <option value={Channel.SOCIAL}>Social</option>
+                <option value={Channel.DIRECT}>Direct</option>
+                <option value={Channel.ORGANIC}>Organic</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Topic
+              </label>
+              <select
+                value={newMetric.topic}
+                onChange={(e) =>
+                  setNewMetric((prev) => ({
+                    ...prev,
+                    topic: e.target.value as Topic,
+                  }))
+                }
+                className="w-full border border-gray-300 rounded-md px-3 py-2 text-gray-900"
+              >
+                <option value={Topic.SALES}>Sales</option>
+                <option value={Topic.MARKETING}>Marketing</option>
+                <option value={Topic.PRODUCT}>Product</option>
+                <option value={Topic.CUSTOMER_SERVICE}>Customer Service</option>
+                <option value={Topic.OPERATIONS}>Operations</option>
+                <option value={Topic.FINANCE}>Finance</option>
+                <option value={Topic.TECH}>Technology</option>
+              </select>
+            </div>
+          </div>
+          <div className="flex justify-end gap-3">
+            <button
+              type="button"
+              onClick={handleCloseModal}
+              className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className="px-4 py-2 bg-blue-600 border border-transparent rounded-md text-sm font-medium text-white hover:bg-blue-700"
+            >
+              Add Metric
+            </button>
+          </div>
+        </form>
+      </Modal>
     </>
   );
 };
